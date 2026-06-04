@@ -86,6 +86,9 @@ let rightPressed = false
 // Detectar salto
 let canJump = false
 
+// Movimiento de camara
+let cameraY = 0
+
 // Detectar teclas presionadas
 document.addEventListener("keydown", (event) => {
     if (event.key === "ArrowLeft") {
@@ -131,24 +134,24 @@ function update() {
     // Colisión horizontal
     platforms.forEach(platforms => {
 
-    if (
-        player.x < platforms.x + platforms.width &&
-        player.x + player.width > platforms.x &&
-        player.y < platforms.y + platforms.height &&
-        player.y + player.height > platforms.y
-    ) {
+        if (
+            player.x < platforms.x + platforms.width &&
+            player.x + player.width > platforms.x &&
+            player.y < platforms.y + platforms.height &&
+            player.y + player.height > platforms.y
+        ) {
 
-        // izquierda
-        if (previousX + player.width <= platforms.x) {
-            player.x = platforms.x - player.width
-        }
+            // izquierda
+            if (previousX + player.width <= platforms.x) {
+                player.x = platforms.x - player.width
+            }
 
-        // derecha
-        else if (previousX >= platforms.x + platforms.width) {
-            player.x = platforms.x + platforms.width
+            // derecha
+            else if (previousX >= platforms.x + platforms.width) {
+                player.x = platforms.x + platforms.width
+            }
         }
-    }
-})
+    })
 
     // Bordes pantalla
     if (player.x < 0) {
@@ -170,27 +173,27 @@ function update() {
     // Colisión vertical
     platforms.forEach(platforms => {
 
-    if (
-        player.x < platforms.x + platforms.width &&
-        player.x + player.width > platforms.x &&
-        player.y < platforms.y + platforms.height &&
-        player.y + player.height > platforms.y
-    ) {
+        if (
+            player.x < platforms.x + platforms.width &&
+            player.x + player.width > platforms.x &&
+            player.y < platforms.y + platforms.height &&
+            player.y + player.height > platforms.y
+        ) {
 
-        // aterrizar
-        if (previousY + player.height <= platforms.y) {
-            player.y = platforms.y - player.height
-            player.velocityY = 0
-            canJump = true
-        }
+            // aterrizar
+            if (previousY + player.height <= platforms.y) {
+                player.y = platforms.y - player.height
+                player.velocityY = 0
+                canJump = true
+            }
 
-        // golpear abajo
-        else if (previousY >= platforms.y + platforms.height) {
-            player.y = platforms.y + platforms.height
-            player.velocityY = 0
+            // golpear abajo
+            else if (previousY >= platforms.y + platforms.height) {
+                player.y = platforms.y + platforms.height
+                player.velocityY = 0
+            }
         }
-    }
-})
+    })
 
     // Suelo
     if (player.y + player.height > canvas.height) {
@@ -198,6 +201,23 @@ function update() {
         player.velocityY = 0
         canJump = true
     }
+
+    // Movimiento de camara
+    const upperLimit = canvas.height * 0.35
+    const lowerLimit = canvas.height * 0.75
+
+    const playerScreenY = player.y - cameraY
+
+    let targetCameraY = cameraY
+
+    if (playerScreenY < upperLimit) {
+        targetCameraY = player.y - upperLimit
+    }
+    else if (playerScreenY > lowerLimit) {
+        targetCameraY = player.y - lowerLimit
+    }
+
+    cameraY += (targetCameraY - cameraY) * 0.05
 }
 
 function draw() {
@@ -207,7 +227,7 @@ function draw() {
     ctx.fillStyle = player.color
     ctx.fillRect(
         player.x,
-        player.y,
+        player.y - cameraY,
         player.width,
         player.height
     )
@@ -216,7 +236,7 @@ function draw() {
     ctx.fillStyle = stairs.color
     ctx.fillRect(
         stairs.x,
-        stairs.y,
+        stairs.y - cameraY,
         stairs.width,
         stairs.height
     )
@@ -226,19 +246,19 @@ function draw() {
         ctx.fillStyle = platforms.color
         ctx.fillRect(
             platforms.x,
-            platforms.y,
+            platforms.y - cameraY,
             platforms.width,
             platforms.height
         )
     })
 }
 
-    // Corazón del juego, se ejecuta muchas veces por segundo
-    function gameLoop() {
-        update()
-        draw()
-        requestAnimationFrame(gameLoop) // Ejecuta el juego cada frame
-    }
+// Corazón del juego, se ejecuta muchas veces por segundo
+function gameLoop() {
+    update()
+    draw()
+    requestAnimationFrame(gameLoop) // Ejecuta el juego cada frame
+}
 
-    // Iniciar juego
-    gameLoop()
+// Iniciar juego
+gameLoop()
