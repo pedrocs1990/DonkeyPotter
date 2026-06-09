@@ -99,17 +99,38 @@ const platforms = [
     height: 20,
     color: 'brown'
   },
-  { // altura 8
+  { // altura 8 plataforma 1
     x: 0,
     y: -120,
-    width: canvas.width,
+    width: 375,
     height: 20,
     color: 'brown'
   },
-  { // altura 9
+  { // altura 8 plataforma 2
+    x: 425,
+    y: -120,
+    width: 375,
+    height: 20,
+    color: 'brown'
+  },
+  { // altura 9 plataforma 1
     x: 0,
     y: -320,
-    width: canvas.width,
+    width: 50,
+    height: 20,
+    color: 'brown'
+  },
+  { // altura 9 plataforma 2
+    x: 100,
+    y: -320,
+    width: 600,
+    height: 20,
+    color: 'brown'
+  },
+  { // altura 9 plataforma 3
+    x: 750,
+    y: -320,
+    width: 50,
     height: 20,
     color: 'brown'
   },
@@ -124,24 +145,24 @@ const platforms = [
 
 const stairs = [
   { // stairs 1
-    x: 385,
-    y: -120,
-    width: 30,
-    height: 200,
+    x: 375,
+    y: -150,
+    width: 50,
+    height: 230,
     color: 'black'
   },
   { // stairs 2
     x: 50,
-    y: -320,
-    width: 30,
-    height: 200,
+    y: -350,
+    width: 50,
+    height: 230,
     color: 'black'
   },
   { // stairs 3
-    x: 720,
-    y: -320,
-    width: 30,
-    height: 200,
+    x: 700,
+    y: -350,
+    width: 50,
+    height: 230,
     color: 'black'
   }
 ]
@@ -149,6 +170,10 @@ const stairs = [
 // Variable para controlar el estado de las teclas
 let leftPressed = false
 let rightPressed = false
+let upPressed = false
+let downPressed = false
+
+let onStairs = false
 
 // Detectar salto
 let canJump = false
@@ -166,9 +191,18 @@ document.addEventListener("keydown", (event) => {
     rightPressed = true
   }
 
-  if (event.key === "ArrowUp" && canJump) {
-    player.velocityY = player.jumpForce
-    canJump = false
+  if (event.key === "ArrowUp") {
+    upPressed = true
+
+    // Saltar si no hay escalera
+    if (canJump && !onStairs) {
+      player.velocityY = player.jumpForce
+      canJump = false
+    }
+  }
+
+  if (event.key === "ArrowDown") {
+    downPressed = true
   }
 })
 
@@ -181,9 +215,30 @@ document.addEventListener("keyup", (event) => {
   if (event.key === "ArrowRight") {
     rightPressed = false
   }
+
+  if (event.key === "ArrowUp") {
+    upPressed = false
+  }
+
+  if (event.key === "ArrowDown") {
+    downPressed = false
+  }
 })
 
 function update() {
+
+  onStairs = false
+
+  stairs.forEach(stairs => {
+    if (
+      player.x < stairs.x + stairs.width &&
+      player.x + player.width > stairs.x &&
+      player.y < stairs.y + stairs.height &&
+      player.y + player.height > stairs.y
+    ) {
+      onStairs = true
+    }
+  })
 
   const previousX = player.x
   const previousY = player.y
@@ -231,8 +286,20 @@ function update() {
 
   // MOVIMIENTO VERTICAL
 
-  player.velocityY += player.gravity
-  player.y += player.velocityY
+  if (onStairs) {
+    player.velocityY = 0
+
+    if (upPressed) {
+      player.y -= player.speed
+    }
+
+    if (downPressed) {
+      player.y += player.speed
+    }
+  } else {
+    player.velocityY += player.gravity
+    player.y += player.velocityY
+  }
 
   // Reiniciamos cada frame
   canJump = false
@@ -290,15 +357,15 @@ function update() {
 function draw() {
   // Limpiar el canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height)
-  
-// Dibujar el suelo
-ctx.fillStyle = floor.color
-ctx.fillRect(
-  floor.x,
-  floor.y - cameraY,
-  floor.width,
-  floor.height
-)
+
+  // Dibujar el suelo
+  ctx.fillStyle = floor.color
+  ctx.fillRect(
+    floor.x,
+    floor.y - cameraY,
+    floor.width,
+    floor.height
+  )
 
   // Dibujar el personaje
   ctx.fillStyle = player.color
