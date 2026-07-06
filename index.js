@@ -28,8 +28,83 @@ const player = {
   speed: 2, // Velocidad de movimiento
   velocityY: 0, // Velocidad vertical para la gravedad
   gravity: 0.5, // Fuerza de gravedad
-  jumpForce: -12 // Fuerza de salto
+  jumpForce: -12, // Fuerza de salto
+  direction: 1 // 1 derecha, -1 izquierda
 }
+
+// Enemigos
+const enemies = [
+  { // altura 1
+    x: 200,
+    y: 570, // encima de la plataforma de y=600
+    width: 30,
+    height: 30,
+    color: 'blue',
+    speed: 1,
+    direction: 1, // 1 derecha, -1 izquierda
+    changeDirectionTimer: 0
+  },
+  { // altura 2
+    x: 500,
+    y: 470,
+    width: 30,
+    height: 30,
+    color: 'blue',
+    speed: 1,
+    direction: -1,
+    changeDirectionTimer: 0
+  },
+  { // altura 2
+    x: 200,
+    y: 470,
+    width: 30,
+    height: 30,
+    color: 'blue',
+    speed: 1,
+    direction: 1,
+    changeDirectionTimer: 0
+  },
+  { // altura 4
+    x: 200,
+    y: 320,
+    width: 30,
+    height: 30,
+    color: 'blue',
+    speed: 1,
+    direction: 1,
+    changeDirectionTimer: 0
+  },
+  { // altura 6
+    x: 650,
+    y: 170,
+    width: 30,
+    height: 30,
+    color: 'blue',
+    speed: 1,
+    direction: 1,
+    changeDirectionTimer: 0
+  },
+  { // altura 6
+    x: 50,
+    y: 170,
+    width: 30,
+    height: 30,
+    color: 'blue',
+    speed: 1,
+    direction: 1,
+    changeDirectionTimer: 0
+  },
+  { // altura 7
+    x: 200,
+    y: 50,
+    width: 30,
+    height: 30,
+    color: 'blue',
+    speed: 1,
+    direction: 1,
+    changeDirectionTimer: 0
+  }
+]
 
 // Plataforma
 const platforms = [
@@ -171,6 +246,33 @@ const stairs = [
   }
 ]
 
+// detectar si personaje o enemigo está en plataforma
+function getPlatformUnder(character) {
+  for (const platform of platforms) {
+
+    const characterBottom = character.y + character.height
+
+    const isLeftOfPlatformRightEdge =
+      character.x < platform.x + platform.width
+
+    const isRightOfPlatformLeftEdge =
+      character.x + character.width > platform.x
+
+    const isStandingOnPlatform =
+      Math.abs(characterBottom - platform.y) < 5
+
+    if (
+      isLeftOfPlatformRightEdge &&
+      isRightOfPlatformLeftEdge &&
+      isStandingOnPlatform
+    ) {
+      return platform
+    }
+  }
+
+  return null
+}
+
 // Variable para controlar el estado de las teclas
 let leftPressed = false
 let rightPressed = false
@@ -184,6 +286,9 @@ let canJump = false
 
 // Movimiento de camara
 let cameraY = 0
+
+//Disparo
+const shots = []
 
 // Detectar teclas presionadas
 document.addEventListener("keydown", (event) => {
@@ -207,6 +312,18 @@ document.addEventListener("keydown", (event) => {
 
   if (event.key === "ArrowDown") {
     downPressed = true
+  }
+
+  if (event.code === "Space") {
+    shots.push({
+      x: player.x + player.width / 2,
+      y: player.y + player.height / 2,
+      width: 12,
+      height: 12,
+      speed: 6,
+      direction: player.direction,
+      color: 'cyan'
+    })
   }
 })
 
@@ -257,10 +374,12 @@ function update() {
 
   if (leftPressed) {
     player.x -= player.speed
+    player.direction = -1
   }
 
   if (rightPressed) {
     player.x += player.speed
+    player.direction = 1
   }
 
   // Colisión horizontal
@@ -387,6 +506,73 @@ function update() {
   }
 
   cameraY += (targetCameraY - cameraY) * CAMERA_VELOCITY
+
+  enemies.forEach(enemy => {
+
+    const enemyPlatform = getPlatformUnder(enemy)
+    const playerPlatform = getPlatformUnder(player)
+
+    const samePlatform =
+      enemyPlatform &&
+      playerPlatform &&
+      enemyPlatform === playerPlatform
+
+    if (samePlatform) {
+
+      // Perseguir jugador
+
+      if (player.x < enemy.x) {
+        enemy.x -= enemy.speed
+      }
+      else if (player.x > enemy.x) {
+        enemy.x += enemy.speed
+      }
+
+    } else {
+
+      // Movimiento aleatorio
+
+      enemy.changeDirectionTimer -= 1
+
+      if (enemy.changeDirectionTimer <= 0) {
+
+        enemy.direction =
+          Math.random() < 0.5 ? -1 : 1
+
+        enemy.changeDirectionTimer =
+          60 + Math.random() * 180
+      }
+
+      enemy.x += enemy.direction * enemy.speed
+    }
+
+    // Mantener enemigo dentro de la plataforma
+
+    if (enemyPlatform) {
+
+      if (enemy.x < enemyPlatform.x) {
+        enemy.x = enemyPlatform.x
+        enemy.direction = 1
+      }
+
+      if (
+        enemy.x + enemy.width >
+        enemyPlatform.x + enemyPlatform.width
+      ) {
+        enemy.x =
+          enemyPlatform.x +
+          enemyPlatform.width -
+          enemy.width
+
+        enemy.direction = -1
+      }
+    }
+  })
+
+  shots.forEach((shot) => {
+    shot.x += shot.speed * shot.direction
+  })
+
 }
 
 function draw() {
@@ -421,6 +607,27 @@ function draw() {
     player.width,
     player.height
   )
+
+  shots.forEach((shot) => {
+    ctx.fillStyle = shot.color
+    ctx.fillRect(
+      shot.x,
+      shot.y - cameraY,
+      shot.width,
+      shot.height
+    )
+  })
+
+  enemies.forEach(enemy => {
+    ctx.fillStyle = enemy.color
+
+    ctx.fillRect(
+      enemy.x,
+      enemy.y - cameraY,
+      enemy.width,
+      enemy.height
+    )
+  })
 
   // Dibujar la plataformas
   platforms.forEach(platform => {
