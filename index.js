@@ -320,9 +320,11 @@ document.addEventListener("keydown", (event) => {
       y: player.y + player.height / 2,
       width: 12,
       height: 12,
-      speed: 6,
+      speed: 3,
       direction: player.direction,
-      color: 'cyan'
+      color: 'gold',
+      distance: 0,
+      maxDistance: 150
     })
   }
 })
@@ -571,7 +573,14 @@ function update() {
 
   shots.forEach((shot) => {
     shot.x += shot.speed * shot.direction
+    shot.distance += shot.speed
   })
+
+  for (let i = shots.length - 1; i >= 0; i--) {
+  if (shots[i].distance >= shots[i].maxDistance) {
+    shots.splice(i, 1)
+  }
+}
 
 }
 
