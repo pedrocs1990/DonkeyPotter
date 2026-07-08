@@ -29,7 +29,8 @@ const player = {
   velocityY: 0, // Velocidad vertical para la gravedad
   gravity: 0.5, // Fuerza de gravedad
   jumpForce: -12, // Fuerza de salto
-  direction: 1 // 1 derecha, -1 izquierda
+  direction: 1, // 1 derecha, -1 izquierda
+  lifes: 3
 }
 
 // Enemigos
@@ -310,6 +311,9 @@ let cameraY = 0
 
 //Disparo
 const shots = []
+
+const hearthImage = new Image ()
+hearthImage.src = 'Imagenes/hearth.webp'
 
 // Detectar teclas presionadas
 document.addEventListener("keydown", (event) => {
@@ -712,6 +716,17 @@ function draw() {
       platform.height
     )
   })
+
+  // Dibujar vidas
+  for (let i = 0; i < player.lifes; i++) {
+    ctx.drawImage(
+      hearthImage,
+      20 + i * 40,
+      20,
+      30,
+      30
+    )
+  }
 }
 
 // Corazón del juego, se ejecuta muchas veces por segundo
