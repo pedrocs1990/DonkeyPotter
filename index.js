@@ -138,7 +138,9 @@ const boss = {
   height: 50,
   color: 'purple',
   speed: 1.5,
-  active: false
+  active: false,
+  shootTimer: 0,
+  shootInterval: 90
 }
 
 const initialEnemies = structuredClone(enemies)
@@ -346,6 +348,7 @@ const retryButton = {
 
 //Disparo
 const shots = []
+const bossShots = []
 
 const hearthImage = new Image()
 hearthImage.src = 'Imagenes/hearth.webp'
@@ -655,6 +658,22 @@ function update() {
     if (boss.x + boss.width > bossRightLimit) {
       boss.x = bossRightLimit - boss.width
     }
+
+    boss.shootTimer -= 1
+
+    if (boss.shootTimer <= 0) {
+      bossShots.push({
+        x: boss.x + boss.width / 2 - 6,
+        y: boss.y + boss.height,
+        width: 12,
+        height: 18,
+        speed: 4,
+        color: 'red',
+        remove: false
+      })
+
+      boss.shootTimer = boss.shootInterval
+    }
   }
 
   enemies.forEach(enemy => {
@@ -802,6 +821,58 @@ function update() {
     }
   }
 
+  bossShots.forEach((shot) => {
+    shot.y += shot.speed
+  })
+
+  bossShots.forEach((shot) => {
+
+    const collision =
+      shot.x < player.x + player.width &&
+      shot.x + shot.width > player.x &&
+      shot.y < player.y + player.height &&
+      shot.y + shot.height > player.y
+
+    if (collision && !player.hit) {
+      player.lifes -= 1
+
+      shot.remove = true
+
+      if (player.lifes <= 0) {
+        player.lifes = 0
+        gameOver = true
+        gameOverText.y = -150
+        gameOverText.velocityY = 0
+        return
+      }
+
+      player.hit = true
+      player.velocityY = -8
+
+      if (player.x < shot.x) {
+        player.velocityHitX = -4
+      } else {
+        player.velocityHitX = 4
+      }
+
+      player.invulnerableTimer = 120
+    }
+
+  })
+
+  for (let i = bossShots.length - 1; i >= 0; i--) {
+    const shot = bossShots[i]
+
+    const shotScreenY = shot.y - cameraY
+
+    if (
+      shot.remove ||
+      shotScreenY > canvas.height + 50
+    ) {
+      bossShots.splice(i, 1)
+    }
+  }
+
 }
 
 function draw() {
@@ -923,7 +994,7 @@ function draw() {
     )
   })
 
-  // Dinujar el boss
+  // Dibujar el boss
   ctx.fillStyle = boss.color
 
   ctx.fillRect(
@@ -932,6 +1003,17 @@ function draw() {
     boss.width,
     boss.height
   )
+
+  bossShots.forEach((shot) => {
+    ctx.fillStyle = shot.color
+
+    ctx.fillRect(
+      shot.x,
+      shot.y - cameraY,
+      shot.width,
+      shot.height
+    )
+  })
 
   // Dibujar la plataformas
   platforms.forEach(platform => {
@@ -988,6 +1070,11 @@ function restartGame() {
   boss.x = 375
   boss.y = -370
   boss.active = false
+  bossShots.length = 0
+  boss.shootTimer = 0
+  boss.active = false
+  boss.x = 375
+  boss.y = -370
 }
 
 // Corazón del juego, se ejecuta muchas veces por segundo
