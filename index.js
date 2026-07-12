@@ -131,6 +131,16 @@ let enemies = [
   }
 ]
 
+const boss = {
+  x: 375,
+  y: -370,
+  width: 50,
+  height: 50,
+  color: 'purple',
+  speed: 1.5,
+  active: false
+}
+
 const initialEnemies = structuredClone(enemies)
 
 // Plataforma
@@ -248,6 +258,10 @@ const platforms = [
     color: 'brown'
   }
 ]
+const platform8Left = platforms[10]
+const platform8Right = platforms[11]
+const bossLeftLimit = 0
+const bossRightLimit = canvas.width
 
 const stairs = [
   { // stairs 1
@@ -616,6 +630,33 @@ function update() {
 
   cameraY += (targetCameraY - cameraY) * CAMERA_VELOCITY
 
+  const playerPlatform = getPlatformUnder(player)
+
+  const playerIsOnPlatform8 =
+    playerPlatform === platform8Left || playerPlatform === platform8Right
+
+  if (playerIsOnPlatform8) {
+    boss.active = true
+  }
+
+  if (boss.active) {
+    if (player.x < boss.x) {
+      boss.x -= boss.speed
+    }
+
+    if (player.x > boss.x) {
+      boss.x += boss.speed
+    }
+
+    if (boss.x < bossLeftLimit) {
+      boss.x = bossLeftLimit
+    }
+
+    if (boss.x + boss.width > bossRightLimit) {
+      boss.x = bossRightLimit - boss.width
+    }
+  }
+
   enemies.forEach(enemy => {
 
     if (enemy.hit) {
@@ -870,6 +911,7 @@ function draw() {
     )
   })
 
+  // Dibujar enemigos
   enemies.forEach(enemy => {
     ctx.fillStyle = enemy.color
 
@@ -880,6 +922,16 @@ function draw() {
       enemy.height
     )
   })
+
+  // Dinujar el boss
+  ctx.fillStyle = boss.color
+
+  ctx.fillRect(
+    boss.x,
+    boss.y - cameraY,
+    boss.width,
+    boss.height
+  )
 
   // Dibujar la plataformas
   platforms.forEach(platform => {
@@ -931,6 +983,11 @@ function restartGame() {
   // Animación del Game Over
   gameOverText.y = -150
   gameOverText.velocityY = 0
+
+  // Boss
+  boss.x = 375
+  boss.y = -370
+  boss.active = false
 }
 
 // Corazón del juego, se ejecuta muchas veces por segundo
