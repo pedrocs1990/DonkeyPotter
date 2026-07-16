@@ -447,6 +447,15 @@ const victoryButton = {
   height: 60
 }
 
+// Pantalla inicial
+let gameStarted = false
+const startButton = {
+  x: canvas.width / 2 - 130,
+  y: 470,
+  width: 260,
+  height: 65
+}
+
 //Disparo
 const shots = []
 const bossShots = []
@@ -454,18 +463,24 @@ const bossShots = []
 const heartImage = new Image()
 heartImage.src = 'Imagenes/heart.png'
 const backgrounImage = new Image()
-backgrounImage.src = 'Imagenes/fondo.png'
+backgrounImage.src = 'Imagenes/background.png'
 const floorImage = new Image()
-floorImage.src = 'Imagenes/suelo-castillo.png'
+floorImage.src = 'Imagenes/floor.png'
 const platformImage = new Image()
-platformImage.src = 'Imagenes/plataforma.png'
+platformImage.src = 'Imagenes/platform.png'
 const stairsImage = new Image()
-stairsImage.src = 'Imagenes/escalera.png'
+stairsImage.src = 'Imagenes/stair.png'
 const greenHeartImage = new Image()
 greenHeartImage.src = 'Imagenes/boss-heart.png'
+const startScreenImage = new Image()
+startScreenImage.src = 'Imagenes/front-page.png'
 
 // Detectar teclas presionadas
 document.addEventListener("keydown", (event) => {
+  if (!gameStarted || gameOver || gameWon) {
+    return
+  }
+
   if (event.key === "ArrowLeft") {
     leftPressed = true
   }
@@ -523,17 +538,39 @@ document.addEventListener("keyup", (event) => {
   }
 })
 
-// Botón retry y victory
+// Botón start game, retry y victory
 canvas.addEventListener('click', (event) => {
-
-  if (!gameOver && !gameWon) {
-    return
-  }
 
   const rect = canvas.getBoundingClientRect()
 
-  const mouseX = event.clientX - rect.left
-  const mouseY = event.clientY - rect.top
+  const scaleX = canvas.width / rect.width
+  const scaleY = canvas.height / rect.height
+
+  const mouseX =
+    (event.clientX - rect.left) * scaleX
+
+  const mouseY =
+    (event.clientY - rect.top) * scaleY
+
+  // Botón de iniciar partida
+  if (!gameStarted) {
+    const insideStartButton =
+      mouseX >= startButton.x &&
+      mouseX <= startButton.x + startButton.width &&
+      mouseY >= startButton.y &&
+      mouseY <= startButton.y + startButton.height
+
+    if (insideStartButton) {
+      gameStarted = true
+    }
+
+    return
+  }
+
+  // Si la partida continúa, no hay ningún botón
+  if (!gameOver && !gameWon) {
+    return
+  }
 
   let button = retryButton
 
@@ -553,6 +590,10 @@ canvas.addEventListener('click', (event) => {
 })
 
 function update() {
+
+  if (!gameStarted) {
+    return
+  }
 
   if (gameOver) {
 
@@ -1234,6 +1275,64 @@ function update() {
 function draw() {
   // Limpiar el canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+  // Pantalla de inicio
+  if (!gameStarted) {
+
+    ctx.drawImage(
+      startScreenImage,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    )
+
+    // Fondo del botón
+    ctx.fillStyle = 'rgba(45, 15, 65, 0.9)'
+
+    ctx.fillRect(
+      startButton.x,
+      startButton.y,
+      startButton.width,
+      startButton.height
+    )
+
+    // Borde exterior dorado
+    ctx.strokeStyle = '#d8a928'
+    ctx.lineWidth = 5
+
+    ctx.strokeRect(
+      startButton.x,
+      startButton.y,
+      startButton.width,
+      startButton.height
+    )
+
+    // Borde interior
+    ctx.strokeStyle = '#ffe38a'
+    ctx.lineWidth = 2
+
+    ctx.strokeRect(
+      startButton.x + 7,
+      startButton.y + 7,
+      startButton.width - 14,
+      startButton.height - 14
+    )
+
+    // Texto del botón
+    ctx.fillStyle = '#ffe38a'
+    ctx.font = 'bold 27px Arial'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+
+    ctx.fillText(
+      'INICIAR PARTIDA',
+      startButton.x + startButton.width / 2,
+      startButton.y + startButton.height / 2
+    )
+
+    return
+  }
 
   // Fondo juego
   ctx.drawImage(
