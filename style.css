@@ -5,23 +5,22 @@
 }
 
 body {
-    height: 100vh;
-    background: url(imagenes/fondo_juego.png) center/cover no-repeat;
+    min-height: 100vh;
+    background: url(imagenes/game-background.png) center/cover no-repeat;
 }
 
 .container {
+    min-height: 100vh;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
-}
-
-.logo {
-    width: 430px;
-    height: 200px;
 }
 
 canvas {
     display: block;
-    background: white;
-    border: 4px solid black;
+    border: 3px solid #b78a2d;
+    border-radius: 4px;
+    box-shadow:
+        0 0 20px rgba(0, 0, 0, .8),
+        0 0 40px rgba(60, 40, 10, .4);
 }
